@@ -1,0 +1,53 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.9.2
+      with:
+        versionSpec: '5.2.x'
+    - name: Fetch all history for all tags and branches
+      run: git fetch --prune --unshallow
+    - name: Use GitVersion
+      id: gitversion # step id used as reference for output values
+      uses: gittools/actions/gitversion/execute@v0.9.2
+    - name: Set version env var
+      id: setversion
+      env:
+        ver: ${{ steps.gitversion.outputs.fullsemver }}
+      run: echo "::set-env name=version::$(echo ${ver//+/-})"
+      shell: bash
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v1.1.0
+      with:
+        username: ${{ secrets.DOCKER_LOGIN }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        repository: aodpi/hr-management-identity
+        tags: ${{ env.version }}, latest
+        dockerfile: docker/Dockerfile
+        add_git_labels: true
+        cache_froms: aodpi/hr-management-identity:latest
+    - name: Aks set context
+      uses: Azure/aks-set-context@v1
+      with:
+        creds: ${{ secrets.AZ_CREDS }}
+        resource-group: DefaultResourceGroup-WEU
+        cluster-name: k8s-sandbox
+    - name: deploy api
+      uses: Azure/k8s-deploy@v1.2
+      with:
+        namespace: hrm-dev
+        manifests: |
+          deploy/k8s/1.deployment.yaml
+          deploy/k8s/2.service.yaml
+          deploy/k8s/4.hpa.yaml
+        images: aodpi/hr-management-identity:${{ env.version }}
+        imagepullsecrets: regcred
