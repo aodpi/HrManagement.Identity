@@ -71,10 +71,15 @@ namespace hrid
 
             app.UsePathBase("/auth");
 
-            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            ForwardedHeadersOptions options = new ForwardedHeadersOptions
             {
                 ForwardedHeaders = ForwardedHeaders.All
-            });
+            };
+
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+
+            app.UseForwardedHeaders(options);
 
             app.UseRouting();
             app.UseIdentityServer();
