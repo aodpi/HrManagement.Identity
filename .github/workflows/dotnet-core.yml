@@ -34,7 +34,6 @@ jobs:
         tags: ${{ env.version }}, latest
         dockerfile: docker/Dockerfile
         add_git_labels: true
-        cache_froms: aodpi/hr-management-identity:latest
     - name: Aks set context
       uses: Azure/aks-set-context@v1
       with:
