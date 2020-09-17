@@ -67,9 +67,9 @@ namespace hrid
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseStaticFiles();
-
             app.UsePathBase("/auth");
+
+            app.UseStaticFiles();
 
             ForwardedHeadersOptions options = new ForwardedHeadersOptions
             {
