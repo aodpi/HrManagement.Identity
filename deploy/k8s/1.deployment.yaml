@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hrm-identity
+  name: hrm-identity
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: hrm-identity
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: hrm-identity
+    spec:
+      containers:
+      - env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        - name: CONNECTIONSTRINGS__DEFAULTCONNECTION
+          valueFrom:
+            secretKeyRef:
+              key: DEFAULT
+              name: sql-connection
+              optional: false
+        image: aodpi/hr-management-identity:latest
+        imagePullPolicy: IfNotPresent
+        name: hrm-identity
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            memory: 250M
+            cpu: 100m
+          limits:
+            memory: 500M
+            cpu: 250m
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities: {}
+          privileged: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: false
+        stdin: true
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        tty: true
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: regcred
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
