@@ -32,7 +32,7 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: aodpi/hr-management-identity
         tags: ${{ env.version }}, latest
-        dockerfile: docker/Dockerfile
+        dockerfile: Dockerfile
         add_git_labels: true
     - name: Aks set context
       uses: Azure/aks-set-context@v1
