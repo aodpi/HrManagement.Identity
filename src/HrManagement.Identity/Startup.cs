@@ -68,6 +68,7 @@ namespace hrid
 
             app.UseStaticFiles();
 
+            app.UsePathBase("/auth");
             app.UseRouting();
             app.UseIdentityServer();
             app.UseAuthorization();
