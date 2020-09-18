@@ -46,7 +46,7 @@ namespace hrid
                     },
                     PostLogoutRedirectUris = { "http://localhost:4200", "https://hrmdev.tk" },
                     AllowedCorsOrigins = { "http://localhost:4200", "https://hrmdev.tk" },
-                    AccessTokenLifetime = 60,
+                    AccessTokenLifetime = 240,
                     AllowOfflineAccess = false,
                     AllowAccessTokensViaBrowser = true,
                     AccessTokenType = AccessTokenType.Jwt,
