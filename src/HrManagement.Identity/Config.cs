@@ -38,8 +38,8 @@ namespace hrid
                 {
                     ClientId = "hrm.angular",
                     AllowedGrantTypes = GrantTypes.Implicit,
-                    RedirectUris = { "http://localhost:4200/signin-callback", "https://hrmdev.tk/signin-callback" },
-                    PostLogoutRedirectUris = { "http://localhost:4200/signout-callback", "https://hrmdev.tk/signout-callback" },
+                    RedirectUris = { "http://localhost:4200/assets/signin-callback.html", "https://hrmdev.tk/assets/signin-callback.html" },
+                    PostLogoutRedirectUris = { "http://localhost:4200", "https://hrmdev.tk" },
                     AllowedCorsOrigins = { "http://localhost:4200", "https://hrmdev.tk" },
                     AccessTokenLifetime = 60,
                     AllowOfflineAccess = false,
