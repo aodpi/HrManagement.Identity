@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Events;
@@ -9,13 +14,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
 
-namespace IdentityServerHost.Quickstart.UI
+namespace HrManagement.Identity.Quickstart.Account
 {
     [SecurityHeaders]
     [AllowAnonymous]
@@ -23,13 +23,11 @@ namespace IdentityServerHost.Quickstart.UI
     {
         private readonly TestUserStore _users;
         private readonly IIdentityServerInteractionService _interaction;
-        private readonly IClientStore _clientStore;
         private readonly ILogger<ExternalController> _logger;
         private readonly IEventService _events;
 
         public ExternalController(
             IIdentityServerInteractionService interaction,
-            IClientStore clientStore,
             IEventService events,
             ILogger<ExternalController> logger,
             TestUserStore users = null)
@@ -39,7 +37,6 @@ namespace IdentityServerHost.Quickstart.UI
             _users = users ?? new TestUserStore(TestUsers.Users);
 
             _interaction = interaction;
-            _clientStore = clientStore;
             _logger = logger;
             _events = events;
         }
@@ -58,20 +55,19 @@ namespace IdentityServerHost.Quickstart.UI
                 // user might have clicked on a malicious link - should be logged
                 throw new Exception("invalid return URL");
             }
-            
+
             // start challenge and roundtrip the return URL and scheme 
             var props = new AuthenticationProperties
             {
-                RedirectUri = Url.Action(nameof(Callback)), 
+                RedirectUri = Url.Action(nameof(Callback)),
                 Items =
                 {
-                    { "returnUrl", returnUrl }, 
-                    { "scheme", scheme },
+                    {"returnUrl", returnUrl},
+                    {"scheme", scheme},
                 }
             };
 
             return Challenge(props, scheme);
-            
         }
 
         /// <summary>
@@ -81,7 +77,8 @@ namespace IdentityServerHost.Quickstart.UI
         public async Task<IActionResult> Callback()
         {
             // read external identity from the temporary cookie
-            var result = await HttpContext.AuthenticateAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
+            var result =
+                await HttpContext.AuthenticateAsync(IdentityServerConstants.ExternalCookieAuthenticationScheme);
             if (result?.Succeeded != true)
             {
                 throw new Exception("External authentication error");
@@ -109,7 +106,7 @@ namespace IdentityServerHost.Quickstart.UI
             var additionalLocalClaims = new List<Claim>();
             var localSignInProps = new AuthenticationProperties();
             ProcessLoginCallback(result, additionalLocalClaims, localSignInProps);
-            
+
             // issue authentication cookie for user
             var isuser = new IdentityServerUser(user.SubjectId)
             {
@@ -128,7 +125,8 @@ namespace IdentityServerHost.Quickstart.UI
 
             // check if external login is in the context of an OIDC request
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
-            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.SubjectId, user.Username, true, context?.Client.ClientId));
+            await _events.RaiseAsync(new UserLoginSuccessEvent(provider, providerUserId, user.SubjectId, user.Username,
+                true, context?.Client.ClientId));
 
             if (context != null)
             {
@@ -143,7 +141,8 @@ namespace IdentityServerHost.Quickstart.UI
             return Redirect(returnUrl);
         }
 
-        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims) FindUserFromExternalProvider(AuthenticateResult result)
+        private (TestUser user, string provider, string providerUserId, IEnumerable<Claim> claims)
+            FindUserFromExternalProvider(AuthenticateResult result)
         {
             var externalUser = result.Principal;
 
@@ -175,7 +174,8 @@ namespace IdentityServerHost.Quickstart.UI
 
         // if the external login is OIDC-based, there are certain things we need to preserve to make logout work
         // this will be different for WS-Fed, SAML2p or other protocols
-        private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
+        private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims,
+            AuthenticationProperties localSignInProps)
         {
             // if the external system sent a session id claim, copy it over
             // so we can use it for single sign-out
@@ -189,7 +189,7 @@ namespace IdentityServerHost.Quickstart.UI
             var idToken = externalResult.Properties.GetTokenValue("id_token");
             if (idToken != null)
             {
-                localSignInProps.StoreTokens(new[] { new AuthenticationToken { Name = "id_token", Value = idToken } });
+                localSignInProps.StoreTokens(new[] {new AuthenticationToken {Name = "id_token", Value = idToken}});
             }
         }
     }

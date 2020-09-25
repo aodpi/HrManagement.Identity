@@ -2,20 +2,18 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
+using System.Linq;
+using System.Threading.Tasks;
 using IdentityServer4.Events;
+using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using IdentityServer4.Extensions;
+using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Linq;
-using System.Threading.Tasks;
-using IdentityServer4.Validation;
-using System.Collections.Generic;
-using System;
 
-namespace IdentityServerHost.Quickstart.UI
+namespace HrManagement.Identity.Quickstart.Consent
 {
     /// <summary>
     /// This controller processes the consent UI
@@ -47,12 +45,7 @@ namespace IdentityServerHost.Quickstart.UI
         public async Task<IActionResult> Index(string returnUrl)
         {
             var vm = await BuildViewModelAsync(returnUrl);
-            if (vm != null)
-            {
-                return View("Index", vm);
-            }
-
-            return View("Error");
+            return vm != null ? View("Index", vm) : View("Error");
         }
 
         /// <summary>
@@ -103,24 +96,25 @@ namespace IdentityServerHost.Quickstart.UI
 
             ConsentResponse grantedConsent = null;
 
-            // user clicked 'no' - send back the standard 'access_denied' response
-            if (model?.Button == "no")
+            switch (model.Button)
             {
-                grantedConsent = new ConsentResponse { Error = AuthorizationError.AccessDenied };
+                // user clicked 'no' - send back the standard 'access_denied' response
+                // user clicked 'yes' - validate the data
+                case "no":
+                    grantedConsent = new ConsentResponse {Error = AuthorizationError.AccessDenied};
 
-                // emit event
-                await _events.RaiseAsync(new ConsentDeniedEvent(User.GetSubjectId(), request.Client.ClientId, request.ValidatedResources.RawScopeValues));
-            }
-            // user clicked 'yes' - validate the data
-            else if (model?.Button == "yes")
-            {
+                    // emit event
+                    await _events.RaiseAsync(new ConsentDeniedEvent(User.GetSubjectId(), request.Client.ClientId,
+                        request.ValidatedResources.RawScopeValues));
+                    break;
                 // if the user consented to some scope, build the response model
-                if (model.ScopesConsented != null && model.ScopesConsented.Any())
+                case "yes" when model.ScopesConsented != null && model.ScopesConsented.Any():
                 {
                     var scopes = model.ScopesConsented;
                     if (ConsentOptions.EnableOfflineAccess == false)
                     {
-                        scopes = scopes.Where(x => x != IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess);
+                        scopes = scopes.Where(x =>
+                            x != IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess);
                     }
 
                     grantedConsent = new ConsentResponse
@@ -131,16 +125,17 @@ namespace IdentityServerHost.Quickstart.UI
                     };
 
                     // emit event
-                    await _events.RaiseAsync(new ConsentGrantedEvent(User.GetSubjectId(), request.Client.ClientId, request.ValidatedResources.RawScopeValues, grantedConsent.ScopesValuesConsented, grantedConsent.RememberConsent));
+                    await _events.RaiseAsync(new ConsentGrantedEvent(User.GetSubjectId(), request.Client.ClientId,
+                        request.ValidatedResources.RawScopeValues, grantedConsent.ScopesValuesConsented,
+                        grantedConsent.RememberConsent));
+                    break;
                 }
-                else
-                {
+                case "yes":
                     result.ValidationError = ConsentOptions.MustChooseOneErrorMessage;
-                }
-            }
-            else
-            {
-                result.ValidationError = ConsentOptions.InvalidSelectionErrorMessage;
+                    break;
+                default:
+                    result.ValidationError = ConsentOptions.InvalidSelectionErrorMessage;
+                    break;
             }
 
             if (grantedConsent != null)
@@ -168,10 +163,8 @@ namespace IdentityServerHost.Quickstart.UI
             {
                 return CreateConsentViewModel(model, returnUrl, request);
             }
-            else
-            {
-                _logger.LogError("No consent request matching request: {0}", returnUrl);
-            }
+
+            _logger.LogError("No consent request matching request: {0}", returnUrl);
 
             return null;
         }
@@ -194,28 +187,28 @@ namespace IdentityServerHost.Quickstart.UI
                 AllowRememberConsent = request.Client.AllowRememberConsent
             };
 
-            vm.IdentityScopes = request.ValidatedResources.Resources.IdentityResources.Select(x => CreateScopeViewModel(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            vm.IdentityScopes = request.ValidatedResources.Resources.IdentityResources.Select(x =>
+                CreateScopeViewModel(x, vm.ScopesConsented.Contains(x.Name) || model == null)).ToArray();
 
-            var apiScopes = new List<ScopeViewModel>();
-            foreach(var parsedScope in request.ValidatedResources.ParsedScopes)
-            {
-                var apiScope = request.ValidatedResources.Resources.FindApiScope(parsedScope.ParsedName);
-                if (apiScope != null)
-                {
-                    var scopeVm = CreateScopeViewModel(parsedScope, apiScope, vm.ScopesConsented.Contains(parsedScope.RawValue) || model == null);
-                    apiScopes.Add(scopeVm);
-                }
-            }
+            var apiScopes = (from parsedScope in request.ValidatedResources.ParsedScopes
+                let apiScope = request.ValidatedResources.Resources.FindApiScope(parsedScope.ParsedName)
+                where apiScope != null
+                select CreateScopeViewModel(parsedScope, apiScope,
+                    vm.ScopesConsented.Contains(parsedScope.RawValue) || model == null)).ToList();
+
             if (ConsentOptions.EnableOfflineAccess && request.ValidatedResources.Resources.OfflineAccess)
             {
-                apiScopes.Add(GetOfflineAccessScope(vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) || model == null));
+                apiScopes.Add(GetOfflineAccessScope(
+                    vm.ScopesConsented.Contains(IdentityServer4.IdentityServerConstants.StandardScopes.OfflineAccess) ||
+                    model == null));
             }
+
             vm.ApiScopes = apiScopes;
 
             return vm;
         }
 
-        private ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
+        private static ScopeViewModel CreateScopeViewModel(IdentityResource identity, bool check)
         {
             return new ScopeViewModel
             {
@@ -231,7 +224,7 @@ namespace IdentityServerHost.Quickstart.UI
         public ScopeViewModel CreateScopeViewModel(ParsedScopeValue parsedScopeValue, ApiScope apiScope, bool check)
         {
             var displayName = apiScope.DisplayName ?? apiScope.Name;
-            if (!String.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
+            if (!string.IsNullOrWhiteSpace(parsedScopeValue.ParsedParameter))
             {
                 displayName += ":" + parsedScopeValue.ParsedParameter;
             }
@@ -247,7 +240,7 @@ namespace IdentityServerHost.Quickstart.UI
             };
         }
 
-        private ScopeViewModel GetOfflineAccessScope(bool check)
+        private static ScopeViewModel GetOfflineAccessScope(bool check)
         {
             return new ScopeViewModel
             {

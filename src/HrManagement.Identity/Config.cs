@@ -2,10 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 
-using IdentityServer4.Models;
 using System.Collections.Generic;
+using IdentityServer4.Models;
 
-namespace hrid
+namespace HrManagement.Identity
 {
     public static class Config
     {
@@ -17,39 +17,40 @@ namespace hrid
             };
 
         public static IEnumerable<ApiScope> ApiScopes =>
-            new ApiScope[]
+            new[]
             {
                 new ApiScope("hrm.backend")
             };
 
         public static IEnumerable<ApiResource> ApiResources =>
-            new ApiResource[]
+            new[]
             {
                 new ApiResource("hrm.backend.api", "HRM API")
                 {
-                    Scopes = { "hrm.backend" }
+                    Scopes = {"hrm.backend"}
                 }
             };
 
         public static IEnumerable<Client> Clients =>
-            new Client[]
+            new[]
             {
                 new Client
                 {
                     ClientId = "hrm.angular",
                     AllowedGrantTypes = GrantTypes.Implicit,
-                    RedirectUris = { 
+                    RedirectUris =
+                    {
                         "http://localhost:4200/assets/signin-callback.html",
                         "https://hrmdev.tk/assets/signin-callback.html",
-                        "http://localhost:4200/assets/silent-callback.html", 
+                        "http://localhost:4200/assets/silent-callback.html",
                         "https://hrmdev.tk/assets/silent-callback.html",
                     },
-                    PostLogoutRedirectUris = { "http://localhost:4200", "https://hrmdev.tk" },
-                    AllowedCorsOrigins = { "http://localhost:4200", "https://hrmdev.tk" },
+                    PostLogoutRedirectUris = {"http://localhost:4200", "https://hrmdev.tk"},
+                    AllowedCorsOrigins = {"http://localhost:4200", "https://hrmdev.tk"},
                     AllowOfflineAccess = false,
                     AllowAccessTokensViaBrowser = true,
                     AccessTokenType = AccessTokenType.Jwt,
-                    AllowedScopes = { "openid", "profile", "hrm.backend" },
+                    AllowedScopes = {"openid", "profile", "hrm.backend"},
                     ClientName = "HRM Angular UI Frontend",
                     RequireClientSecret = false,
                     RequirePkce = true,

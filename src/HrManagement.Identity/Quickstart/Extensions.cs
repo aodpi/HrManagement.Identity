@@ -1,8 +1,9 @@
 using System;
+using HrManagement.Identity.Quickstart.Account;
 using IdentityServer4.Models;
 using Microsoft.AspNetCore.Mvc;
 
-namespace IdentityServerHost.Quickstart.UI
+namespace HrManagement.Identity.Quickstart
 {
     public static class Extensions
     {
