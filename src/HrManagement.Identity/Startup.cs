@@ -55,8 +55,8 @@ namespace hrid
                     // register your IdentityServer with Google at https://console.developers.google.com
                     // enable the Google+ API
                     // set the redirect URI to https://localhost:5001/signin-google
-                    options.ClientId = "copy client ID from Google here";
-                    options.ClientSecret = "copy client secret from Google here";
+                    options.ClientId = "43707255235-om9v6hfod8gpih50obkadt96cpiib8p4.apps.googleusercontent.com";
+                    options.ClientSecret = "i7dPnWCInp_81jRVbeHLalzF";
                 });
         }
 
