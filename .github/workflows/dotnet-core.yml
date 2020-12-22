@@ -12,20 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.4
-      with:
-        versionSpec: '5.3.x'
-    - name: Use GitVersion
-      id: gitversion # step id used as reference for output values
-      uses: gittools/actions/gitversion/execute@v0.9.4
+    - name: Git Version
+      uses: codacy/git-version@2.4.0
+    - name: Generate Version
+      run: echo '::set-output name=VERSION::$(./git-version)'
+      id: getver
     - name: Build and push Docker images
       uses: docker/build-push-action@v1.1.0
       with:
         username: ${{ secrets.DOCKER_LOGIN }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: aodpi/hr-management-identity
-        tags: ${{ steps.gitversion.outputs.fullSemVer }}, latest
+        tags: ${{ steps.getver.outputs.VERSION }}
         dockerfile: Dockerfile
         add_git_labels: true        
   deploy:
