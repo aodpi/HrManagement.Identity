@@ -28,7 +28,8 @@ jobs:
         tags: ${{ steps.gitversion.outputs.fullSemVer }}, latest
         dockerfile: Dockerfile
         add_git_labels: true        
-  deploy-prepare:
+  deploy:
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Aks set context
@@ -37,11 +38,6 @@ jobs:
           creds: ${{ secrets.AZ_CREDS }}
           resource-group: DefaultResourceGroup-WEU
           cluster-name: k8s-sandbox
-
-  deploy:
-    needs: [deploy-prepare, build]
-    runs-on: ubuntu-latest
-    steps:
       - name: deploy api
         uses: Azure/k8s-deploy@v1.2
         with:
