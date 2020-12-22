@@ -27,20 +27,23 @@ jobs:
         repository: aodpi/hr-management-identity
         tags: ${{ steps.gitversion.outputs.fullSemVer }}, latest
         dockerfile: Dockerfile
-        add_git_labels: true
-    - name: Aks set context
-      uses: Azure/aks-set-context@v1
-      with:
-        creds: ${{ secrets.AZ_CREDS }}
-        resource-group: DefaultResourceGroup-WEU
-        cluster-name: k8s-sandbox
-    - name: deploy api
-      uses: Azure/k8s-deploy@v1.2
-      with:
-        namespace: hrm-dev
-        manifests: |
-          deploy/k8s/1.deployment.yaml
-          deploy/k8s/2.service.yaml
-          deploy/k8s/4.hpa.yaml
-        images: aodpi/hr-management-identity:${{ steps.gitversion.outputs.fullSemVer }}
-        imagepullsecrets: regcred
+        add_git_labels: true        
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Aks set context
+        uses: Azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.AZ_CREDS }}
+          resource-group: DefaultResourceGroup-WEU
+          cluster-name: k8s-sandbox
+      - name: deploy api
+        uses: Azure/k8s-deploy@v1.2
+        with:
+          namespace: hrm-dev
+          manifests: |
+            deploy/k8s/1.deployment.yaml
+            deploy/k8s/2.service.yaml
+            deploy/k8s/4.hpa.yaml
+          images: aodpi/hr-management-identity:${{ jobs.build.steps.gitversion.outputs.fullSemVer }}
+          imagepullsecrets: regcred
