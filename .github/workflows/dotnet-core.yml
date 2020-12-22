@@ -7,6 +7,8 @@ on:
 
 jobs:
   build:
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
