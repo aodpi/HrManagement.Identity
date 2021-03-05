@@ -12,20 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.4
-      with:
-        versionSpec: '5.3.x'
-    - name: Use GitVersion
-      id: gitversion # step id used as reference for output values
-      uses: gittools/actions/gitversion/execute@v0.9.4
     - name: Build and push Docker images
       uses: docker/build-push-action@v1.1.0
       with:
         username: ${{ secrets.DOCKER_LOGIN }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         repository: aodpi/hr-management-identity
-        tags: ${{ steps.gitversion.outputs.fullSemVer }}, latest
+        tags: ${{ github.sha }}, latest
         dockerfile: Dockerfile
         add_git_labels: true        
   deploy:
@@ -46,5 +39,5 @@ jobs:
             deploy/k8s/1.deployment.yaml
             deploy/k8s/2.service.yaml
             deploy/k8s/4.hpa.yaml
-          images: aodpi/hr-management-identity:${{ steps.gitversion.outputs.fullSemVer }}
+          images: aodpi/hr-management-identity:${{ github.sha }}
           imagepullsecrets: regcred
