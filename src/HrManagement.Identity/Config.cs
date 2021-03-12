@@ -27,7 +27,7 @@ namespace hrid
             {
                 new ApiResource("hrm.backend.api", "HRM API")
                 {
-                    Scopes = { "hrm.backend" }
+                    Scopes = { "hrm.backend", "profile" }
                 }
             };
 
